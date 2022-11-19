@@ -62,9 +62,14 @@ class Enigma:
             #mid rotates on notch
             if self.rotor_mid.base_rotor[0] in self.rotor_mid.notch:
                 self.rotor_mid.rotate()
-            #left rotates on notch
-            if self.rotor_left.base_rotor[0] in self.rotor_left.notch:
+            #rotate on turnover
+            if self.rotor_right.turnover:
+                self.rotor_right.turnover = False
+                self.rotor_mid.rotate()
+            if self.rotor_mid.turnover:
+                self.rotor_mid.turnover = False
                 self.rotor_left.rotate()
+
 
             #pass through plugboard
             i = self.plugboard_map.forward(i)
@@ -86,7 +91,7 @@ class Enigma:
             cipher_txt += self.plugboard_map.backward(i)
 
 
-        print("Encrypted Text:  ",cipher_txt)
+        #print("Encrypted Text:  ",cipher_txt)
         return cipher_txt
 
     def reset(self):
@@ -99,6 +104,7 @@ class Enigma:
         return self.encrypt(cipher_txt)
 
 class Plugboard:
+    #could expand this to allow alternate forms and check until unusable string
     def __init__(self,settings):
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         self.plugboard = {}
@@ -109,11 +115,19 @@ class Plugboard:
         else:
             try:
                 plugboard = settings.split(" ")
+                for i in plugboard:
+                    if len(i)!= 2:
+                        raise IndexError("Incorrect Plugboard settings. No plugboard used")
                 for c in self.alphabet:
                     self.plugboard[c] = c
+                map_set = set()
                 for map in plugboard:
+                    if map[0] in map_set or map[1] in map_set:
+                        raise IndexError("Incorrect Plugboard settings. No plugboard used")
                     self.plugboard[map[0]] = map[1]
                     self.plugboard[map[1]] = map[0]
+                    map_set.add(map[0])
+                    map_set.add(map[1])
             except IndexError:
                 print("Incorrect Plugboard settings. No plugboard used")
                 for c in self.alphabet:
@@ -140,8 +154,9 @@ class Rotor:
                 "V":    ["VZBRGITYUPSDNHLXAWMJQOFECK", "A", "Z"]
                 }
         self.rotor_order = None
-        self.turnovers = self.rotor_settings[self.setting][1]
+        self.turnover_letter = self.rotor_settings[self.setting][1]
         self.notch = self.rotor_settings[self.setting][2]
+        self.turnover = False
         self.reset()
 
     #might need to reverse these?
@@ -156,6 +171,8 @@ class Rotor:
     def rotate(self):
         self.base_rotor = self.base_rotor[1:] + self.base_rotor[0]
         self.rotor_order = self.rotor_order[1:] + self.rotor_order[:1]
+        if(self.base_rotor[0] in self.turnover_letter):
+            self.turnover = True
 
     def reset(self):
         #Reset the rotor positions
@@ -186,7 +203,7 @@ if __name__ == "__main__":
     cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
     print("Left cipher order: ",cipher.rotor_left.rotor_order)
     print(cipher.plugboard_map.plugboard)
-    cipher_txt = cipher.encrypt("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    cipher_txt = cipher.encrypt("A"*20000)
     #print("Encrypted Text:   QYQBPFOCGWJMZOSICSPZNBYSZYJCSXJYPCJRCSIZIIQOFYPWBRNHQHMKQQ")
     cipher.decrypt(cipher_txt)
 
@@ -196,8 +213,11 @@ if __name__ == "__main__":
     #print(rotor.ROTOR_GR_III)
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
                                 rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
-                                plugs="AV BS CG DL FU HZ IN KM OW RX")
-
+                                plugs="AV BS CG DL FU HZ IN KMOWRX")
+    print(rotor.ROTOR_I.wiring)
     #print(engine)
-    secret = engine.encipher("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    print(secret)
+    secret = engine.encipher("A"*20000)
+    #print(secret)
+    print(cipher_txt == secret)
+    cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "KNJSHF")
+    print(engine.transtab)
