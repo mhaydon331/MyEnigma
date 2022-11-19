@@ -16,6 +16,9 @@ class Enigma:
         III     BDFHJLCPRTXVZNYEIWGAKMUSQO  D       V       W
         IV      ESOVPZJAYQUIRHXLNFTGKDCMWB  R       J       K
         V       VZBRGITYUPSDNHLXAWMJQOFECK  H       Z       A
+        VI      JPGVOUMFYQBENHZRDKASXLICTW  H/U     Z/M     A/N
+        VII     NZJHGRCXMYSWBOUFAIVLPEKQDT  H/U     Z/M     A/N
+        VIII    FKQHTLXOCBJSPDZRAMEWNIUYGV  H/U     Z/M     A/N
         """
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         if rotors[0][0] == rotors[1][0] or rotors[0][0] == rotors[2][0] or rotors[1][0] == rotors[2][0]:
@@ -115,9 +118,9 @@ class Plugboard:
         else:
             try:
                 plugboard = settings.split(" ")
-                for i in plugboard:
-                    if len(i)!= 2:
-                        raise IndexError("Incorrect Plugboard settings. No plugboard used")
+                #for i in plugboard:
+                #    if len(i)!= 2:
+                #       raise IndexError("Incorrect Plugboard settings. No plugboard used")
                 for c in self.alphabet:
                     self.plugboard[c] = c
                 map_set = set()
@@ -147,11 +150,14 @@ class Rotor:
         self.offset = settings[1]
         self.base_rotor = None
         self.rotor_settings = {
-                "I":    ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R", "Q"],
-                "II":   ["AJDKSIRUXBLHWTMCQGZNPYFVOE", "F", "E"],
-                "III":  ["BDFHJLCPRTXVZNYEIWGAKMUSQO", "W", "V"],
-                "IV":   ["ESOVPZJAYQUIRHXLNFTGKDCMWB", "K", "J"],
-                "V":    ["VZBRGITYUPSDNHLXAWMJQOFECK", "A", "Z"]
+                "I":    ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R",  "Q"],
+                "II":   ["AJDKSIRUXBLHWTMCQGZNPYFVOE", "F",  "E"],
+                "III":  ["BDFHJLCPRTXVZNYEIWGAKMUSQO", "W",  "V"],
+                "IV":   ["ESOVPZJAYQUIRHXLNFTGKDCMWB", "K",  "J"],
+                "V":    ["VZBRGITYUPSDNHLXAWMJQOFECK", "A",  "Z"],
+                "VI":   ["JPGVOUMFYQBENHZRDKASXLICTW", "AN", "ZM"],
+                "VII":  ["NZJHGRCXMYSWBOUFAIVLPEKQDT", "AN", "ZM"],
+                "VIII": ["FKQHTLXOCBJSPDZRAMEWNIUYGV", "AN", "ZM"]
                 }
         self.rotor_order = None
         self.turnover_letter = self.rotor_settings[self.setting][1]
@@ -200,7 +206,7 @@ class Reflector:
         return self.order.index(self.base[index])
 
 if __name__ == "__main__":
-    cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+    cipher = Enigma(rotors = [["VI",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
     print("Left cipher order: ",cipher.rotor_left.rotor_order)
     print(cipher.plugboard_map.plugboard)
     cipher_txt = cipher.encrypt("A"*20000)
@@ -212,12 +218,19 @@ if __name__ == "__main__":
 
     #print(rotor.ROTOR_GR_III)
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
-                                rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
-                                plugs="AV BS CG DL FU HZ IN KMOWRX")
-    print(rotor.ROTOR_I.wiring)
-    #print(engine)
+                                rotor.ROTOR_II, rotor.ROTOR_VI, key="AAA",
+                                plugs="AV BS CG DL FU HZ IN KM OW RX")
+    #print(rotor.ROTOR_I.wiring)
+    print(engine)
     secret = engine.encipher("A"*20000)
     #print(secret)
     print(cipher_txt == secret)
-    cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "KNJSHF")
+    """
+    cipher = Enigma(rotors = [["VI",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KMOWRX")
     print(engine.transtab)
+    plugboard = {}
+    for k,v in cipher.plugboard_map.plugboard.items():
+        plugboard[ord(k)] = ord(v)
+    print(plugboard)
+    print(plugboard == engine.transtab)
+    """
