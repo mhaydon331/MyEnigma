@@ -69,6 +69,11 @@ def test_rotor_v_pyenigma():
     assert Rotor(["VII",0]).rotor_order == rotor.ROTOR_VII.wiring
     assert Rotor(["VIII",0]).rotor_order == rotor.ROTOR_VIII.wiring
 
+def test_relfector_v_pyengima():
+    assert Reflector("A").order == Reflector("UKW-A").order == rotor.ROTOR_Reflector_A.wiring
+    assert Reflector("B").order == Reflector("UKW-B").order == rotor.ROTOR_Reflector_B.wiring
+    assert Reflector("C").order == Reflector("UKW-C").order == rotor.ROTOR_Reflector_C.wiring
+
 def test_against_pyenigma():
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
                                 rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
