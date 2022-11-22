@@ -5,29 +5,39 @@ from enigma import Plugboard
 from pyenigma import enigma
 from pyenigma import rotor
 import pytest
+import random
 
 
 def test_init():
     #tests cipher exists with correct settings
-    cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+    cipher = Enigma(rotors=[["III", 0], ["II", 0], ["I", 0]], reflector="UKW-A",plugboard="AV BS CG DL FU HZ IN KM OW RX")
     assert cipher.alphabet == "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     #test duplicate rotor exits
-    with pytest.raises(SystemExit) as excinfo:
-        cipher = Enigma(rotors = [["II",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+    with pytest.raises(SystemExit):
+        Enigma(rotors=[["II", 0], ["II", 0], ["I", 0]], reflector="UKW-A",
+               plugboard="AV BS CG DL FU HZ IN KM OW RX")
     #test incorrect rotor specified exits
     with pytest.raises(SystemExit) as excinfo:
-        cipher = Enigma(rotors = [["I",0],["II",0],["VXI",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+        Enigma(rotors=[["I", 0], ["II", 0], ["VXI", 0]], reflector="UKW-A",
+               plugboard="AV BS CG DL FU HZ IN KM OW RX")
     #test incorrect reflector specified exits
     with pytest.raises(SystemExit) as excinfo:
-        cipher = Enigma(rotors = [["I",0],["II",0],["III",0]], reflector = "UKW-W", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+        Enigma(rotors=[["I", 0], ["II", 0], ["III", 0]], reflector="UKW-W",
+               plugboard="AV BS CG DL FU HZ IN KM OW RX")
 
 def test_plugboard():
     #test all one string only uses first two settings according to pyenigma
     plug_board = Plugboard("NKMOWRX")
-    assert plug_board.plugboard == {'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H', 'I': 'I', 'J': 'J', 'K': 'N', 'L': 'L', 'M': 'M', 'N': 'K', 'O': 'O', 'P': 'P', 'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
+    assert plug_board.plugboard == {'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H',
+                                    'I': 'I', 'J': 'J', 'K': 'N', 'L': 'L', 'M': 'M', 'N': 'K', 'O': 'O', 'P': 'P',
+                                    'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X',
+                                    'Y': 'Y', 'Z': 'Z'}
     #test incorrect plugboard (duplicate plugs attempted) used sets default plygboard
     plug_board = Plugboard("AN MP BQ AK")
-    assert plug_board.plugboard == {'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H', 'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N', 'O': 'O', 'P': 'P', 'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X', 'Y': 'Y', 'Z': 'Z'}
+    assert plug_board.plugboard == {'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D', 'E': 'E', 'F': 'F', 'G': 'G', 'H': 'H',
+                                    'I': 'I', 'J': 'J', 'K': 'K', 'L': 'L', 'M': 'M', 'N': 'N', 'O': 'O', 'P': 'P',
+                                    'Q': 'Q', 'R': 'R', 'S': 'S', 'T': 'T', 'U': 'U', 'V': 'V', 'W': 'W', 'X': 'X',
+                                    'Y': 'Y', 'Z': 'Z'}
 
 def test_plugboard_v_pyengima():
     #testing plugboard against pyenigma
@@ -41,20 +51,20 @@ def test_plugboard_v_pyengima():
         plugboard[ord(k)] = ord(v)
     assert engine.transtab == plugboard
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
-                                rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
-                                plugs="")
+                           rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
+                           plugs="")
 
     plug_board = Plugboard("")
     plugboard = {}
-    for k,v in plug_board.plugboard.items():
+    for k, v in plug_board.plugboard.items():
         plugboard[ord(k)] = ord(v)
     assert engine.transtab == plugboard
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
-                                rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
-                                plugs="AV BS CG DL FU HZ IN KMOWRX")
+                           rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
+                           plugs="AV BS CG DL FU HZ IN KMOWRX")
     plug_board = Plugboard("AV BS CG DL FU HZ IN KMOWRX")
     plugboard = {}
-    for k,v in plug_board.plugboard.items():
+    for k, v in plug_board.plugboard.items():
         plugboard[ord(k)] = ord(v)
     assert engine.transtab == plugboard
 
@@ -78,39 +88,74 @@ def test_encrypt_against_pyenigma():
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
                            rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
                            plugs="AV BS CG DL FU HZ IN KM OW RX")
-    secret = engine.encipher("A" * 20000)
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
+    ciper_txt_pyenigma = engine.encipher(secret)
     cipher = Enigma(rotors=[["I", 0], ["II", 0], ["III", 0]], reflector="UKW-A",
                     plugboard="AV BS CG DL FU HZ IN KM OW RX")
-    cipher_txt = cipher.encrypt("A" * 20000)
-    assert secret == cipher_txt
-
+    cipher_txt = cipher.encrypt(secret)
+    assert ciper_txt_pyenigma == cipher_txt
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
                            rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
                            plugs="AV BS CG DL FU HZ IN KM OW RX")
-    secret = engine.encipher("A" * 20000)
+    ciper_txt_pyenigma = engine.encipher(secret)
     cipher = Enigma(rotors=[["II", 0], ["I", 1], ["IV", 2]], reflector="UKW-A",
                     plugboard="AV BS CG DL FU HZ IN KM OW RX")
-    cipher_txt = cipher.encrypt("A" * 20000)
-    assert secret == cipher_txt
-
+    cipher_txt = cipher.encrypt(secret)
+    assert ciper_txt_pyenigma == cipher_txt
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
                            rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
                            plugs="AV BS CG DL FU HZ IN KM OW RX")
-    secret = engine.encipher("A" * 20000)
+    ciper_txt_pyenigma = engine.encipher(secret)
     cipher = Enigma(rotors=[["II", 0], ["I", 0], ["IV", 0]], reflector="UKW-A", ringsettings = "ABC",
                     plugboard="AV BS CG DL FU HZ IN KM OW RX")
-    cipher_txt = cipher.encrypt("A" * 20000)
-    assert secret == cipher_txt
+    cipher_txt = cipher.encrypt(secret)
+    assert ciper_txt_pyenigma == cipher_txt
 
 def test_decrypt():
     cipher = Enigma(rotors=[["III", 0], ["II", 0], ["I", 0]], reflector="UKW-A",
                     plugboard="AV BS CG DL FU HZ IN KM OW RX")
-    secret = "A" * 20000
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
     cipher_txt = cipher.decrypt(cipher.encrypt(secret))
     assert secret == cipher_txt
     cipher = Enigma(rotors=[["III", 0], ["II", 0], ["I", 0]], reflector="UKW-A",
                     plugboard="AV BS CG DL FU HZ IN KM OW RX")
-    secret = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" * 20000
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
     cipher_txt = cipher.decrypt(cipher.encrypt(secret))
+    assert secret == cipher_txt
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
+    cipher = Enigma(rotors=[["V", 0], ["VI", 0], ["IV", 0]], reflector="UKW-A", ringsettings="ABC",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.decrypt(cipher.encrypt(secret))
+    assert secret == cipher_txt
+
+def test_decrypt_v_pyenigma():
+    engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
+                           rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
+    cipher_txt = engine.encipher(secret)
+    cipher = Enigma(rotors=[["II", 0], ["I", 0], ["IV", 0]], reflector="UKW-A", ringsettings="ABC",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.decrypt(cipher_txt)
+    assert secret == cipher_txt
+    engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
+                           rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0, 2000000)])
+    cipher_txt = engine.encipher(secret)
+    cipher = Enigma(rotors=[["II", 0], ["I", 0], ["IV", 0]], reflector="UKW-A", ringsettings="ABC",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.decrypt(cipher_txt)
+    assert secret == cipher_txt
+    engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
+                           rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = "".join([random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for i in range(0,2000000)])
+    cipher_txt = engine.encipher(secret)
+    cipher = Enigma(rotors=[["II", 0], ["I", 0], ["IV", 0]], reflector="UKW-A", ringsettings="ABC",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.decrypt(cipher_txt)
     assert secret == cipher_txt
 
