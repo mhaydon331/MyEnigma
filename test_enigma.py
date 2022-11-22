@@ -74,18 +74,43 @@ def test_relfector_v_pyengima():
     assert Reflector("B").order == Reflector("UKW-B").order == rotor.ROTOR_Reflector_B.wiring
     assert Reflector("C").order == Reflector("UKW-C").order == rotor.ROTOR_Reflector_C.wiring
 
-def test_against_pyenigma():
+def test_encrypt_against_pyenigma():
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
-                                rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
-                                plugs="AV BS CG DL FU HZ IN KM OW RX")
-    secret = engine.encipher("A"*20000)
-    cipher = Enigma(rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
-    cipher_txt = cipher.encrypt("A"*20000)
+                           rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = engine.encipher("A" * 20000)
+    cipher = Enigma(rotors=[["I", 0], ["II", 0], ["III", 0]], reflector="UKW-A",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.encrypt("A" * 20000)
     assert secret == cipher_txt
 
+    engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
+                           rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = engine.encipher("A" * 20000)
+    cipher = Enigma(rotors=[["II", 0], ["I", 1], ["IV", 2]], reflector="UKW-A",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.encrypt("A" * 20000)
+    assert secret == cipher_txt
 
-def test_encrypt():
-    pass
+    engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_II,
+                           rotor.ROTOR_I, rotor.ROTOR_IV, key="ABC",
+                           plugs="AV BS CG DL FU HZ IN KM OW RX")
+    secret = engine.encipher("A" * 20000)
+    cipher = Enigma(rotors=[["II", 0], ["I", 0], ["IV", 0]], reflector="UKW-A", ringsettings = "ABC",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    cipher_txt = cipher.encrypt("A" * 20000)
+    assert secret == cipher_txt
 
 def test_decrypt():
-    pass
+    cipher = Enigma(rotors=[["III", 0], ["II", 0], ["I", 0]], reflector="UKW-A",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    secret = "A" * 20000
+    cipher_txt = cipher.decrypt(cipher.encrypt(secret))
+    assert secret == cipher_txt
+    cipher = Enigma(rotors=[["III", 0], ["II", 0], ["I", 0]], reflector="UKW-A",
+                    plugboard="AV BS CG DL FU HZ IN KM OW RX")
+    secret = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" * 20000
+    cipher_txt = cipher.decrypt(cipher.encrypt(secret))
+    assert secret == cipher_txt
+
