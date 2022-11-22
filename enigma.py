@@ -1,12 +1,10 @@
 import sys
-import string
-import json
 from pyenigma import enigma
 from pyenigma import rotor
 
 class Enigma:
     #Enigma I (German Army and Airforce)
-    def __init__(self, rotors = [["I",0],["II",0],["III",0]], reflector = "UKW-B", ringsettings = "ABC",ringpositions = "DEF",plugboard = "AT BS DE FM IR KN LZ OW PV XY"):
+    def __init__(self, rotors = [["III",0],["II",0],["I",0]], reflector = "UKW-B", ringsettings = "",plugboard = "AT BS DE FM IR KN LZ OW PV XY"):
         """
         Rotors
         Setting Wiring                      Notch   Window  Turnover
@@ -20,17 +18,50 @@ class Enigma:
         VII     NZJHGRCXMYSWBOUFAIVLPEKQDT  H/U     Z/M     A/N
         VIII    FKQHTLXOCBJSPDZRAMEWNIUYGV  H/U     Z/M     A/N
         """
+        #adjusted rotor order to mimic left,mid,right order rather than backwards
+        ringsettings = ringsettings.upper()
         self.alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        if rotors[0][0] == rotors[1][0] or rotors[0][0] == rotors[2][0] or rotors[1][0] == rotors[2][0]:
-            print("Incorrect Keys")
-            sys.exit(1)
-        try:
-            self.rotor_left = Rotor(rotors[0])
-            self.rotor_mid = Rotor(rotors[1])
-            self.rotor_right = Rotor(rotors[2])
-        except KeyError:
-            print("Incorrect Keys")
-            sys.exit(1)
+        if type(rotors) == list:
+            try:
+                if rotors[0][0] == rotors[1][0] or rotors[0][0] == rotors[2][0] or rotors[1][0] == rotors[2][0]:
+                    print("Incorrect Rotor Settings")
+                    sys.exit(1)
+            except IndexError:
+                print("Incorrect Rotor Settings")
+                sys.exit(1)
+            try:
+                # added ring settings or offset option
+                print(type(rotors))
+                if ringsettings != "" and len(ringsettings) == 3 and ringsettings.isalpha():
+                    rotors[0][1] = self.alphabet.index(ringsettings[0])
+                    rotors[1][1] = self.alphabet.index(ringsettings[1])
+                    rotors[2][1] = self.alphabet.index(ringsettings[2])
+                self.rotor_left = Rotor(rotors[2])
+                self.rotor_mid = Rotor(rotors[1])
+                self.rotor_right = Rotor(rotors[0])
+            except KeyError:
+                print("Incorrect Rotor Settings")
+                sys.exit(1)
+        else:
+            try:
+                rotors_list = []
+                rotors = rotors.strip().split(",")
+                if ringsettings != "" and len(ringsettings) == 3 and ringsettings.isalpha():
+                    for i in range(0,len(rotors)):
+                        rotors_list.append([rotors[i],self.alphabet.index(ringsettings[i])])
+                    rotors = rotors_list
+                    self.rotor_left = Rotor(rotors[2])
+                    self.rotor_mid = Rotor(rotors[1])
+                    self.rotor_right = Rotor(rotors[0])
+                else:
+                    print("Incorrect Rotor Settings")
+                    sys.exit(1)
+            except IndexError:
+                print("Incorrect Roto1r Settings")
+                sys.exit(1)
+            except KeyError:
+                print("Incorrect Rotor2 Settings")
+                sys.exit(1)
         try:
             self.reflector = Reflector(reflector)
         except KeyError:
@@ -38,8 +69,20 @@ class Enigma:
             sys.exit(1)
         self.plugboard_map  = Plugboard(plugboard)
 
+    def __str__(self):
+        return """
+        Left Rotor: %s 
+        
+        Mid Rotor: %s 
+        
+        Right Rotor: %s
+        
+        Reflector: %s
+        
+        Plugboard: %s""" % (self.rotor_left, self.rotor_mid, self.rotor_right, self.reflector, self.plugboard_map)
+
     def encrypt(self, plain_txt):
-        print("Plain Text:  ",plain_txt)
+        #print("Plain Text:  ",plain_txt)
         cipher_txt = ""
         #Time to encrypt
         #if not alpha just skip
@@ -145,25 +188,46 @@ class Plugboard:
         return self.plugboard[self.alphabet[index]]
 
 class Rotor:
+    """
+    ROTOR_I = Rotor(wiring="EKMFLGDQVZNTOWYHXUSPAIBRCJ",notchs="R", name="I", model="Enigma 1", date="1930")
+    ROTOR_II = Rotor(wiring="AJDKSIRUXBLHWTMCQGZNPYFVOE",notchs="F", name="II", model="Enigma 1", date="1930")
+    ROTOR_III = Rotor(wiring="BDFHJLCPRTXVZNYEIWGAKMUSQO",notchs="W", name="III", model="Enigma 1", date="1930")
+    ROTOR_IV = Rotor(wiring="ESOVPZJAYQUIRHXLNFTGKDCMWB",notchs="K", name="IV", model="M3 Army", date="December 1938")
+    ROTOR_V = Rotor(wiring="VZBRGITYUPSDNHLXAWMJQOFECK",notchs="A", name="V", model="M3 Army", date="December 1938")
+    ROTOR_VI = Rotor(wiring="JPGVOUMFYQBENHZRDKASXLICTW",notchs="AN", name="VI", model="M3 & M4 Naval(February 1942)", date="1939")
+    ROTOR_VII = Rotor(wiring="NZJHGRCXMYSWBOUFAIVLPEKQDT",notchs="AN", name="VII", model="M3 & M4 Naval(February 1942)", date="1939")
+    ROTOR_VIII = Rotor(wiring="FKQHTLXOCBJSPDZRAMEWNIUYGV",notchs="AN", name="VIII", model="M3 & M4 Naval(February 1942)", date="1939")
+
+    """
     def __init__(self,settings):
         self.setting = settings[0]
         self.offset = settings[1]
         self.base_rotor = None
         self.rotor_settings = {
-                "I":    ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R",  "Q"],
-                "II":   ["AJDKSIRUXBLHWTMCQGZNPYFVOE", "F",  "E"],
-                "III":  ["BDFHJLCPRTXVZNYEIWGAKMUSQO", "W",  "V"],
-                "IV":   ["ESOVPZJAYQUIRHXLNFTGKDCMWB", "K",  "J"],
-                "V":    ["VZBRGITYUPSDNHLXAWMJQOFECK", "A",  "Z"],
-                "VI":   ["JPGVOUMFYQBENHZRDKASXLICTW", "AN", "ZM"],
-                "VII":  ["NZJHGRCXMYSWBOUFAIVLPEKQDT", "AN", "ZM"],
-                "VIII": ["FKQHTLXOCBJSPDZRAMEWNIUYGV", "AN", "ZM"]
+                "I":    ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "R",  "Q", "Enigma 1", "1930"],
+                "II":   ["AJDKSIRUXBLHWTMCQGZNPYFVOE", "F",  "E", "Enigma 1", "1930"],
+                "III":  ["BDFHJLCPRTXVZNYEIWGAKMUSQO", "W",  "V", "Enigma 1", "1930"],
+                "IV":   ["ESOVPZJAYQUIRHXLNFTGKDCMWB", "K",  "J", "M3 Army", "December 1938"],
+                "V":    ["VZBRGITYUPSDNHLXAWMJQOFECK", "A",  "Z", "M3 Army", "December 1938"],
+                "VI":   ["JPGVOUMFYQBENHZRDKASXLICTW", "AN", "ZM", "M3 & M4 Naval(February 1942)", "1939"],
+                "VII":  ["NZJHGRCXMYSWBOUFAIVLPEKQDT", "AN", "ZM", "M3 & M4 Naval(February 1942)", "1939"],
+                "VIII": ["FKQHTLXOCBJSPDZRAMEWNIUYGV", "AN", "ZM", "M3 & M4 Naval(February 1942)", "1939"]
                 }
         self.rotor_order = None
         self.turnover_letter = self.rotor_settings[self.setting][1]
         self.notch = self.rotor_settings[self.setting][2]
         self.turnover = False
         self.reset()
+        self.model = self.rotor_settings[self.setting][3]
+        self.date = self.rotor_settings[self.setting][4]
+
+    def __str__(self):
+        return """
+        Name: %s
+        Model: %s
+        Date: %s
+        Wiring: %s
+        Offset: %s""" % (self.setting, self.model, self.date, self.rotor_order, self.original_offset)
 
     #might need to reverse these?
     def forward(self,index):
@@ -186,6 +250,7 @@ class Rotor:
         self.rotor_order = self.rotor_settings[self.setting][0]
         for _ in range(0,self.offset):
             self.rotate()
+        self.original_offset = self.base_rotor[0]
 
 class Reflector:
     def __init__(self,settings):
@@ -206,9 +271,9 @@ class Reflector:
         return self.order.index(self.base[index])
 
 if __name__ == "__main__":
-    cipher = Enigma(rotors = [["VI",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
-    print("Left cipher order: ",cipher.rotor_left.rotor_order)
-    print(cipher.plugboard_map.plugboard)
+    cipher = Enigma(rotors = "I,II,III", reflector = "UKW-A",ringsettings="AAA", plugboard = "AV BS CG DL FU HZ IN KM OW RX")
+    #print("Left cipher order: ",cipher.rotor_left.rotor_order)
+    #print(cipher.plugboard_map.plugboard)
     cipher_txt = cipher.encrypt("A"*20000)
     #print("Encrypted Text:   QYQBPFOCGWJMZOSICSPZNBYSZYJCSXJYPCJRCSIZIIQOFYPWBRNHQHMKQQ")
     cipher.decrypt(cipher_txt)
@@ -218,13 +283,15 @@ if __name__ == "__main__":
 
     #print(rotor.ROTOR_GR_III)
     engine = enigma.Enigma(rotor.ROTOR_Reflector_A, rotor.ROTOR_I,
-                                rotor.ROTOR_II, rotor.ROTOR_VI, key="AAA",
+                                rotor.ROTOR_II, rotor.ROTOR_III, key="AAA",
                                 plugs="AV BS CG DL FU HZ IN KM OW RX")
     #print(rotor.ROTOR_I.wiring)
     print(engine)
     secret = engine.encipher("A"*20000)
     #print(secret)
-    print(cipher_txt == secret)
+    #print(cipher_txt == secret)
+    #print(rotor.ROTOR_I)
+    print(cipher)
     """
     cipher = Enigma(rotors = [["VI",0],["II",0],["I",0]], reflector = "UKW-A", plugboard = "AV BS CG DL FU HZ IN KMOWRX")
     print(engine.transtab)
